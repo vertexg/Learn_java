@@ -639,6 +639,53 @@ try {
 }
 ```
 
+## 例外処理でつまずかないためのポイント
+　### エラーコードをreturnしない
+ 
+ メソッドに処理を依頼した結果を、エラーコードの戻り値として受け取るパターンがあるが、正常なら0、異常時は0以外。引数の不正は1、ファイルオープン失敗は2、データエラーは3、……などなど
+ 
+ これらの値はどこで定義するか？　値が追加されたときのメンテナンスなどを考えるとエラーが発生したら例外を発生させるべき
+ 
+正常に処理が終了したら、そのオブジェクトを戻り値で返す。そうすることで、呼び出し元からみれば「メソッドが終了して戻り値が得られたら、処理自体は成功した」と考えられるので、呼び出し元で不要なif文を作成する必要がなくなる。
+```java
+public String getValueFromFile(File file) throws IOException {
+ Properties props = new Properties();
+ props.load(Files.newInputStream(file.getPath()));
+
+ // ファイル読み込みに失敗している場合はここに来ない
+ // → props が正しくファイルを読み込めたかを if 文で判定する必要がない
+ String value = props.getString("key");
+ return value;
+}
+```
+ただし、何でもかんでも例外をthrowすればいいわけではない。isXxxメソッドといった、元々判定処理を意図したメソッド（booleanを返すもの）は、判定結果がfalseになるような場合でも、判定自体がおこなえたならば、（判定をおこなうという）処理が成功したとみなし、例外はthrowしないようにするべき。
+
+### ログ出力を忘れない
+ログを出力する場合は、発生した例外をログに記録することを忘れない。例外オブジェクトは、問題解決の糸口になる情報の宝庫,探偵がダイイングメッセージを元に犯人を推理するように、我々エンジニアは例外の情報を元にバグを特定し解決を図る
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+public class ValuePrinter {
+ // ログオブジェクト
+ private Logger log = LoggerFactory.getLogger(ValuePrinter.class);
+ public void printValue() {
+String strValue = "abc";
+try {
+ int intValue = Integer.valueOf(strValue);
+ System.out.println("intValue is " + intValue);
+} catch (NumberFormatException ex) {
+ log.warn(" 数値ではありません。", ex);
+}
+```
+
+
+
+
+
+
+
+
 
 
 

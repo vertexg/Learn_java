@@ -534,6 +534,117 @@ public class Main {
 
 ・その他の場合 →　HashMap
 
+## Set
+Setインタフェースは、値の集合を扱うことができるインタフェース
+```java
+Set<String> names = new HashSet<>();
+names.add("Ken"); // ①値の追加
+names.add("Shin");
+names.add("Takuya");
+System.out.println(" ① Set の中身：" + names.toString());
+names.add("Shin"); // ②値の上書き
+System.out.println(" ② Set の中身：" + names.toString());
+names.remove("Shin"); // ③値の削除
+System.out.println(" ③ Set の中身：" + names.toString());
+int size = names.size(); // ④要素数の取得
+System.out.println(" ④要素の数：" + size);
+boolean existKen = names.contains("Ken"); // ⑤値の検索
+System.out.println(" ⑤ Ken の存在：" + exist
+
+```
+
+
+## 例外
+### try～catch～finally
+```java
+try {
+ // SomeException 例外が発生するコードを含む処理
+} catch (SomeException ex) {
+ // SomeException 例外を catch した場合の処理
+} finally {
+ // try ～ catch ブロックを終了する際に必ず実行するべき処理
+}
+
+例
+InputStream is = null;
+try {
+ is = Files.newInputStream(path);
+ read(contents);
+ // contents に対する処理
+} catch (IOException ex) {
+ // 例外を捕捉した場合の処
+} finally {
+ if (is != null) {
+ try {
+ is.close();
+ } catch (IOException closeEx) {
+ // is.close メソッドが IOException を throw するため
+ // catch ブロックが必要だが、この場面で処理する
+ // ことがないため、何もしない
+ }
+ }
+}
+
+```
+
+## try-with-resources
+finallyブロックの書き方は冗長で、リソースを複数使用するtry～catchブロックでは冗長さがさらに倍増し、非常に面倒。
+try-with-resourcesをつかうことで簡単になる
+
+上のコードを書き換えると
+
+```
+try (InputStream is = Files.newInputStream(path)){
+ is.read(contents);
+ // contents に対する処理
+} catch (IOException ex) {
+ // 例外を捕捉した場合の処理
+}
+```
+なぜこの書き方がOKなのか？
+
+Java 7から、InputStreamなどのリソースを扱うクラスは、java.lang.AutoCloseableインタフェースまたはjava.io.Closeableインタフェースを実装するようになり、
+
+そして、tryブロックの開始時にAutoClosableインタフェースの実装クラスを宣言しておくと、そのtry～catchブロック終了時の処理をおこなうcloseメソッドを自動的に呼び出してくれるようになったため。
+
+closeメソッドで例外が発生した場合はどうなるか？
+
+その場合は、try-with-resourcesブロックの外に例外がthrowされます。しかし、その前にtryブロックで例外が発生している場合は、closeメソッドの例外は抑制され、tryブロックで発生した例外がthrowされることになります。抑制された例外は、ThrowableクラスのgetSuppressedメソッドで取得できる
+
+
+## マルチキャッチ
+
+```java
+try {
+ Class<?> clazz = Class.forName(className);
+ SomeClass objSomeClass = clazz.newInstance();
+} catch (ClassNotFoundException ex) {
+ // ClassNotFoundException に対するエラー処理
+} catch (InstantiationException ex) {
+ // InstantiationException に対するエラー処理
+
+```
+このようなcathcブロックだと、例外が増えるたびにcatchブロックが必要になるため、例外処理だけでプログラムが煩雑になる
+
+しかし、7から導入された「マルチキャッチ」を利用すると、catchブロックの記述を少し楽にすることができる
+
+```java
+try {
+ Class<?> clazz = Class.forName(className);
+ SomeClass objSomeClass = clazz.newInstance();
+} catch (ClassNotFoundException |
+ InstantiationException |
+ IllegalAccessException ex) {
+ // エラー処理
+}
+```
+
+
+
+
+
+
+
 
 
 
